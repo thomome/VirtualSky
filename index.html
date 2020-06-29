@@ -167,7 +167,7 @@
 		<div class="example-code">
 			<!-- Make sure the scripts point to the correct locations for the Javascript files. -->
 			<script src="stuquery.min.js"></script>
-			<script src="virtualsky.min.js" type="text/javascript"></script>
+			<script src="virtualsky.js" type="text/javascript"></script>
 			<script>
 			var planetarium;
 
@@ -336,8 +336,17 @@
 							'dec': -5.3911111,
 							'ground': false,
 							'constellations': true,
-							'fov': 15
+							'fov': 3.84 * 3,
+							'fontfamily' : 'Arial'
 						});
+						planetarium7.addFrame({
+							ra: 83.8250500325,
+							dec: -5.4093245155,
+							w: 3.24,
+							h: 2.07,
+							o: 125.73521,
+							label: '3.2 x 2.1 deg'
+						})
 
 					});
 					</script>

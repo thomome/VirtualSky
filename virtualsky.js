@@ -959,6 +959,7 @@ function VirtualSky(input){
 			';'+p+':1px 6px;font-size:1.1em;}</style>');
 
 	this.pointers = []; // Define an empty list of pointers/markers
+	this.frames = []; // Define an empty list of frames
 
 	// Internal variables
 	this.dragging = false;
@@ -2343,7 +2344,8 @@ VirtualSky.prototype.drawImmediate = function(proj){
 		.endClip()
 		.drawCardinalPoints();
 
-	for(i = 0; i < this.pointers.length ; i++) this.highlight(i);
+	for(i = 0; i < this.pointers.length ; i++) this.drawPointer(i);
+	for(i = 0; i < this.frames.length ; i++) this.drawFrame(i);
 
 	var txtcolour = (this.color!="") ? (this.color) : this.col.txt;
 	var fontsize = this.fontsize();
@@ -3181,7 +3183,66 @@ VirtualSky.prototype.drawCardinalPoints = function(){
 };
 
 // Assume decimal Ra/Dec
-VirtualSky.prototype.highlight = function(i,colour){
+VirtualSky.prototype.drawFrame = function(i,colour){
+	var f = this.frames[i];
+	if(this.frames[i].ra && this.frames[i].dec){
+		colour = f.colour || colour || "rgba(255,0,0,1)";
+		if(this.negative) colour = this.getNegative(colour);
+		var center = this.radec2xy(f.ra*this.d2r, f.dec*this.d2r);
+		var rad = ((f.o + 180) * Math.PI / 180);
+		var radCos = Math.cos(rad);
+		var radSin = Math.sin(rad);
+		var w2 = f.w / 2;
+		var h2 = f.h / 2;
+
+		var corners = [
+			this.radec2xy(
+				(f.ra + ((-w2 * radCos) - (-h2 * radSin))) * this.d2r, 
+				(f.dec + ((-w2 * radSin) + (-h2 * radCos))) * this.d2r
+			),
+			this.radec2xy(
+				(f.ra + ((w2 * radCos) - (-h2 * radSin))) * this.d2r, 
+				(f.dec + ((w2 * radSin) + (-h2 * radCos))) * this.d2r
+			),
+			this.radec2xy(
+				(f.ra + ((w2 * radCos) - (h2 * radSin))) * this.d2r, 
+				(f.dec + ((w2 * radSin) + (h2 * radCos))) * this.d2r
+			),
+			this.radec2xy(
+				(f.ra + ((-w2 * radCos) - (h2 * radSin))) * this.d2r, 
+				(f.dec + ((-w2 * radSin) + (h2 * radCos))) * this.d2r
+			)
+		];
+		
+		var c = this.ctx;
+		if(this.isVisible(center.el)){
+			f.az = center.az;
+			f.el = center.el;
+			f.x = center.x;
+			f.y = center.y;
+			c.fillStyle = colour;
+			c.strokeStyle = colour;
+			c.beginPath();
+			c.moveTo(corners[0].x, corners[0].y);
+			c.lineTo(corners[1].x, corners[1].y);
+			c.lineTo(corners[2].x, corners[2].y);
+			c.lineTo(corners[3].x, corners[3].y);
+			c.closePath();
+
+			c.stroke();
+
+			c.translate(corners[2].x,corners[2].y);
+			c.rotate(rad);
+			this.drawLabel(0,0,0,colour,f.label);
+			c.rotate(-rad);
+			c.translate(-corners[2].x,-corners[2].y);
+		}
+	}
+	return this;
+};
+
+// Assume decimal Ra/Dec
+VirtualSky.prototype.drawPointer = function(i,colour){
 	var p = this.pointers[i];
 	if(this.pointers[i].ra && this.pointers[i].dec){
 		colour = p.colour || colour || "rgba(255,0,0,1)";
@@ -3431,6 +3492,24 @@ VirtualSky.prototype.toggleAzimuthMove = function(az){
 		if(this.timer_az!==undefined) clearTimeout(this.timer_az);
 	}
 	return this;
+};
+VirtualSky.prototype.addFrame = function(input){
+	// Check if we've already added this
+	var style,url,img,label,credit;
+	var matched = -1;
+	var f;
+	for(var i = 0 ; i < this.frames.length ; i++){
+		if(this.frames[i].ra == input.ra && this.frames[i].dec == input.dec && this.frames[i].label == input.label) matched = i;
+	}
+	// Hasn't been added already
+	if(matched < 0){
+		input.ra *= 1;	// Correct for a bug
+		input.dec *= 1;
+		i = this.frames.length;
+		f = input;
+		this.frames[i] = f;
+	}
+	return (this.frames.length);
 };
 VirtualSky.prototype.addPointer = function(input){
 	// Check if we've already added this
