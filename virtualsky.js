@@ -234,8 +234,7 @@ function VirtualSky(input){
 
 	// Identify the default base directory
 	this.setDir = function(){
-		var d = S('script[src*=virtualsky]').attr('src')[0].match(/^.*\//);
-		this.dir = d && d[0] || "";
+		this.dir = window.location.hostname
 		return;
 	};
 	this.getDir = function(pattern){
